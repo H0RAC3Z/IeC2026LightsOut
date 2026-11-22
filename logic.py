@@ -1,6 +1,5 @@
 
-import random
-from tkinter import OFF # lets us pick random moves when generating a board
+import random # lets us pick random moves when generating a board
 
 # CONSTANTS
 GRID_SIZE = 5  # Size of the grid (5x5)
@@ -15,8 +14,9 @@ offsets = [(0, 0), (-1, 0), (1, 0), (0, -1), (0, 1)]  # (row_offset, col_offset)
 def is_valid_position(row, col):
     if isinstance(row, bool) or isinstance(col, bool):
         return False
-    if isinstance(row, int) and isinstance(col, int):
+    if not isinstance(row, int) or not isinstance(col, int):
         return False
+    
     return 0 <= row < GRID_SIZE and 0 <= col < GRID_SIZE
 
 
@@ -34,10 +34,10 @@ def toggle(board, row, col):
         target_col = col + col_offset
 
         if is_valid_position(target_row, target_col):
-            if new_board[target_row][target_col] == OFF:
-                new_board[target_row][target_col] = ON
+            if new_board[target_row][target_col] == LIGHTS_OFF:
+                new_board[target_row][target_col] = LIGHTS_ON
             else:
-                new_board[target_row][target_col] = OFF
+                new_board[target_row][target_col] = LIGHTS_OFF
 
     return new_board
 
@@ -46,18 +46,20 @@ def toggle(board, row, col):
 def is_solved(board):
     for row in board:
         for light in row:
-            if light != OFF:
+            if light != LIGHTS_OFF:
                 return False
     return True
 
 # generates a board with a random configuration of lights on and off
 def generate_board():
-    board = [[OFF for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
-    num_random_clicks = random.randint(1, TOTAL_CELLS)
+    board = [[LIGHTS_OFF for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
+    num_random_clicks = random.randint(1, TOTAL_LIGHTS)
 
-    random_row = random.randrange(GRID_SIZE)
-    random_col = random.randrange(GRID_SIZE)
-    board = toggle(board, random_row, random_col)
+    for _ in range(num_random_clicks):
+        random_row = random.randrange(GRID_SIZE)
+        random_col = random.randrange(GRID_SIZE)
+        board = toggle(board, random_row, random_col)
+    
 
     while is_solved(board):
         random_row = random.randrange(GRID_SIZE)
@@ -65,8 +67,3 @@ def generate_board():
         board = toggle(board, random_row, random_col)
 
     return board
-
-   
-# hardest function, will be hard to code, idk how to do it yet, but will be a function that gives a hint to the user on what to do next.
-#def hint(board):
-    
