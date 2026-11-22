@@ -6,36 +6,151 @@
         <link rel="stylesheet" href="{% static 'css/style.css' %}">
     </head>
     <body>
-        <p>testgg</p>
-        {% for row in board %}
-            {% for index in row %}
-                {% if index is 0 %}
-                    <button type="submit" class="off">{{ index }}</button>
-                {% elif index is 1 %}
-                    <button class="on">{{ index }}</button>
-                {% endif %}
-            {% endfor %}
-            <br>
-        {% endfor %}
+        <main class="game-card">
+            <header class="game-header">
+                <p class="eyebrow">PUZZLE GAME</p>
+                <h1>Lights Out</h1>
+                <p class="subtitle">Turn every light off to win.</p>
+            </header>
+
+            <section class="game-info">
+                <div>
+                    <span class="info-label">Moves</span>
+                    <strong id="move_counter">{{ move_counter }}</strong>
+                </div>
+                <div>
+                    <span class="info-label">Time</span>
+                    <strong id="timer" data-elapsed="{{ elapsed_seconds }}">00:00:00</strong>
+                </div>
+                <p id="game_message">Click a tile to toggle it and its neighbours.</p>
+            </section>
+
+            <div id="board">
+                {% for row in board %}
+                    {% for index in row %}
+                        <button
+                            type="button"
+                            aria-label="Row {{ forloop.parentloop.counter }}, column {{ forloop.counter }}"
+                            class="{% if index == 0 %}off{% else %}on{% endif %}"
+                            data-row="{{ forloop.parentloop.counter0 }}"
+                            data-col="{{ forloop.counter0 }}">
+                        </button>
+                    {% endfor %}
+                {% endfor %}
+            </div>
+
+            <div class="game-actions">
+                <button id="hint_button" class="secondary-button" type="button">Show hint</button>
+                <button id="reset_button" class="secondary-button" type="button">Reset board</button>
+            </div>
+            <p class="legend"><span class="legend-dot"></span> Lights on <span class="legend-dot off-dot"></span> Lights off</p>
+        </main>
+        
         <script>
-            // Ajax setup for form submission
-            $(document).ready(function() {
-                $('#myForm').on('submit', function(event) {
-                    event.preventDefault(); 
-                    
-                    $.ajax({
-                        url: '/ajax/',  // The URL of the Django view that handles the request
-                        type: 'POST',
-                        data: {
-                            'name': $('#nameInput').val(),
-                            'csrfmiddlewaretoken': '{{ csrf_token }}' // CSRF token for security
-                        },
-                        success: function(response) {
-                            $('#responseMessage').text(response.message);  // Update the page dynamically
+            const csrfToken = "{{ csrf_token }}";
+            const boardButtons = document.querySelectorAll("#board button");
+            const message = document.querySelector("#game_message");
+
+            function renderBoard(board) {
+                boardButtons.forEach(function (button) {
+                    const row = Number(button.dataset.row);
+                    const col = Number(button.dataset.col);
+                    button.className = board[row][col] === 1 ? "on" : "off";
+                });
+            }
+
+            function postJson(url, body = {}) {
+                return fetch(url, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": csrfToken
+                    },
+                    body: JSON.stringify(body)
+                }).then(response => response.json());
+            }
+
+            boardButtons.forEach(function (button) {
+                button.addEventListener("click", function () {
+                    postJson("{% url 'lightsOutApp:ajax_view' %}", {
+                            row: Number(button.dataset.row),
+                            col: Number(button.dataset.col)
+                        })
+                    .then(data => {
+                        if (data.error) {
+                            console.error(data.error);
+                            return;
                         }
-                    });
+
+                        /* update the surrounding cells */
+                        renderBoard(data.board);
+
+                        document.querySelector("#move_counter").textContent = data.move_counter;
+
+                        message.textContent = data.won
+                            ? "Complete! You solved the board."
+                            : "Keep going — turn every light off.";
+                        message.classList.toggle("won", data.won);
+
+                        elapsedSeconds = data.elapsed_seconds;
+                        if (data.won) stopTimer();
+                    })
+                    .catch(error => console.error("Request failed:", error));
                 });
             });
+
+            document.querySelector("#reset_button").addEventListener("click", function () {
+                postJson("{% url 'lightsOutApp:reset' %}")
+                    .then(data => {
+                        renderBoard(data.board);
+                        document.querySelector("#move_counter").textContent = data.move_counter;
+                        resetTimer();
+                        message.textContent = "New board ready. Good luck!";
+                        message.classList.remove("won");
+                    });
+            });
+
+            document.querySelector("#hint_button").addEventListener("click", function () {
+                postJson("{% url 'lightsOutApp:hint' %}")
+                    .then(data => {
+                        if (data.error) {
+                            message.textContent = data.error;
+                            return;
+                        }
+                        const hint = document.querySelector(`[data-row="${data.row}"][data-col="${data.col}"]`);
+                        hint.classList.add("hint");
+                        message.textContent = "Try the highlighted tile.";
+                        setTimeout(() => hint.classList.remove("hint"), 1200);
+                    });
+            });
+            let elapsedSeconds = Number(document.querySelector("#timer").dataset.elapsed || 0);
+            let timerInterval;
+
+            function formatTime(totalSeconds) {
+                const hours = Math.floor(totalSeconds / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = totalSeconds % 60;
+                return [hours, minutes, seconds].map(value => String(value).padStart(2, "0")).join(":");
+            }
+
+            function updateTimer() {
+                elapsedSeconds += 1;
+                document.querySelector("#timer").textContent = formatTime(elapsedSeconds);
+            }
+
+            function stopTimer() {
+                clearInterval(timerInterval);
+            }
+
+            function resetTimer() {
+                stopTimer();
+                elapsedSeconds = 0;
+                document.querySelector("#timer").textContent = formatTime(elapsedSeconds);
+                timerInterval = setInterval(updateTimer, 1000);
+            }
+
+            document.querySelector("#timer").textContent = formatTime(elapsedSeconds);
+            if (!{{ completed|yesno:"true,false" }}) timerInterval = setInterval(updateTimer, 1000);
         </script>
     </body>
 </html>

@@ -1,0 +1,23 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>How to play | Lights Out</title>
+        <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    </head>
+    <body>
+        <main class="game-card tutorial-card">
+            <p class="eyebrow">HOW TO PLAY</p>
+            <h1>Lights Out</h1>
+            <p class="subtitle">A quick guide before you begin.</p>
+            <div class="tutorial-steps">
+                <p><strong>1.</strong> Click any tile to switch it and the tiles directly beside it.</p>
+                <p><strong>2.</strong> Keep playing until every tile is dark.</p>
+                <p><strong>3.</strong> Use a hint when you need a nudge. Your move count stays unchanged.</p>
+            </div>
+            <a class="primary-button" href="{% url 'lightsOutApp:index' %}">Continue to game</a>
+        </main>
+    </body>
+</html>
