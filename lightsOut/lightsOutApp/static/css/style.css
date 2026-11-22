@@ -1,0 +1,9 @@
+body {
+    background-color: lightblue;
+}
+.on {
+    background-color: greenyellow;
+}
+.off {
+    background-color: gray;
+}

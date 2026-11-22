@@ -1,1 +1,9 @@
 placeholder
+documentation:
+https://chatgpt.com/share/6b03146f-5e58-83ea-92c5-c44a3e698a63
+https://www.geeksforgeeks.org/python/django-templates/
+https://www.geeksforgeeks.org/python/access-array-elements-in-a-django-template/
+https://www.geeksforgeeks.org/python/python-using-2d-arrays-lists-the-right-way/
+Starting
+https://docs.djangoproject.com/en/6.1/intro/tutorial01/
+https://www.w3schools.com/django/django_tags_if.php

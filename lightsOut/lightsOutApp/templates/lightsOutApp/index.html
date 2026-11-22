@@ -1,0 +1,41 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Lights Out!</title>
+        <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    </head>
+    <body>
+        <p>testgg</p>
+        {% for row in board %}
+            {% for index in row %}
+                {% if index is 0 %}
+                    <button type="submit" class="off">{{ index }}</button>
+                {% elif index is 1 %}
+                    <button class="on">{{ index }}</button>
+                {% endif %}
+            {% endfor %}
+            <br>
+        {% endfor %}
+        <script>
+            // Ajax setup for form submission
+            $(document).ready(function() {
+                $('#myForm').on('submit', function(event) {
+                    event.preventDefault(); 
+                    
+                    $.ajax({
+                        url: '/ajax/',  // The URL of the Django view that handles the request
+                        type: 'POST',
+                        data: {
+                            'name': $('#nameInput').val(),
+                            'csrfmiddlewaretoken': '{{ csrf_token }}' // CSRF token for security
+                        },
+                        success: function(response) {
+                            $('#responseMessage').text(response.message);  // Update the page dynamically
+                        }
+                    });
+                });
+            });
+        </script>
+    </body>
+</html>
