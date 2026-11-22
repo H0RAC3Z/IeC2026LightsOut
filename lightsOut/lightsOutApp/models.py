@@ -1,5 +1,6 @@
 from django.db import models
 import random
+from itertools import product
 
 # Create your models here.
 class LightsOut(models.Model):
@@ -87,16 +88,16 @@ class LightsOut(models.Model):
         self.board = board
 
     def get_hint(self, board):
-        # Try every possible combination of presses across the first row.
-        for first_mask in range(1 << self.GRID_SIZE):
+        # Try every possible on/off combination across the first row.
+        for first_row in product([False, True], repeat=self.GRID_SIZE):
             # Work on a copy so checking a possible solution does not change the real board.
             candidate = [list(row) for row in board]
             # Remember the first press in this possible solution to use as the hint.
             first_move = None
 
             # Apply the presses represented by the current first-row combination.
-            for col in range(self.GRID_SIZE):
-                if first_mask & (1 << col):
+            for col, should_press in enumerate(first_row):
+                if should_press:
                     candidate = self.toggle(candidate, 0, col)
                     first_move = (0, col) if first_move is None else first_move
 
